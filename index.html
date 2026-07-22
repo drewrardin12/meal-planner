@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Meal Planner</title>
+
+<!-- Add-to-Home-Screen (iOS) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meals">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6b8f71">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%236b8f71'/%3E%3Ctext x='90' y='128' font-size='110' text-anchor='middle'%3E%F0%9F%8D%B2%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root{
+    --bg:#f7f4ee; --card:#ffffff; --ink:#2f2b26; --muted:#8a8279;
+    --line:#e7e1d6; --green:#6b8f71; --green-d:#557a5c; --cream:#f0ece2;
+    --amber:#d99b52; --red:#c96a5a; --chip:#eef2ec;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:20;background:var(--green);color:#fff;
+    padding:calc(14px + env(safe-area-inset-top)) 16px 14px;
+    box-shadow:0 2px 12px rgba(0,0,0,.08);
+  }
+  header .wrap{padding:0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+  .planpick{
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;
+    font-size:13px;font-weight:600;border-radius:20px;padding:7px 12px;appearance:none;
+    max-width:150px;
+  }
+  .planpick option{color:#2f2b26}
+
+  /* Tabs */
+  nav.tabs{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;
+    border-top:1px solid var(--line);display:flex;
+    padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.05);
+  }
+  nav.tabs button{
+    flex:1;background:none;border:none;padding:9px 4px 8px;cursor:pointer;
+    color:var(--muted);font-size:10.5px;font-weight:600;display:flex;flex-direction:column;
+    align-items:center;gap:3px;font-family:inherit;
+  }
+  nav.tabs button .ic{font-size:20px;line-height:1}
+  nav.tabs button.active{color:var(--green-d)}
+
+  main{padding-top:16px}
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:2px 0 12px;font-weight:700}
+
+  /* Week strip */
+  .weekstrip{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
+  .weekstrip::-webkit-scrollbar{display:none}
+  .weekpill{
+    flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;
+    display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:78px;
+  }
+  .weekpill small{font-size:10px;color:var(--muted);font-weight:600}
+  .weekpill.sel{background:var(--green);border-color:var(--green);color:#fff}
+  .weekpill.sel small{color:rgba(255,255,255,.8)}
+  .weekpill.current::after{content:"● now";font-size:9px;color:var(--amber);font-weight:700}
+  .weekpill.sel.current::after{color:#ffe0b8}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+  .day-head{
+    display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;
+  }
+  .day-head .dn{font-weight:700;font-size:15px}
+  .day-head .dtheme{font-size:11px;color:var(--green-d);background:var(--chip);padding:3px 9px;border-radius:10px;font-weight:600}
+  .day-head .chev{color:var(--muted);font-size:13px;transition:transform .2s}
+  .day-head.open .chev{transform:rotate(90deg)}
+  .day-body{display:none;padding:0 16px 6px;border-top:1px solid var(--line)}
+  .day-body.open{display:block}
+
+  .meal{padding:12px 0;border-bottom:1px dashed var(--line)}
+  .meal:last-child{border-bottom:none}
+  .meal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .meal-slot{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin-bottom:3px}
+  .meal-name{font-size:15px;font-weight:600;line-height:1.25}
+  .meal-name.empty{color:var(--muted);font-weight:500;font-style:italic}
+  .meal-edit{background:var(--chip);border:none;border-radius:9px;width:30px;height:30px;font-size:14px;cursor:pointer;flex:0 0 auto;color:var(--green-d)}
+  .meal-meta{margin-top:7px;display:flex;flex-direction:column;gap:6px}
+  .tagrow{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:11.5px;background:var(--chip);color:var(--ink);padding:3px 9px;border-radius:9px}
+  .tag.side{background:#f3eee2;color:#8a6d3b}
+  .recipe-link{font-size:12.5px;color:var(--green-d);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+  .recipe-book{font-size:12.5px;color:#8a6d3b;font-weight:600}
+
+  /* Grocery */
+  .cat{margin-bottom:16px}
+  .cat h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 6px;font-weight:700}
+  .g-item{
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:7px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;box-shadow:var(--shadow);
+  }
+  .g-name{font-size:14px;font-weight:500;flex:1}
+  .g-name .used{display:block;font-size:10.5px;color:var(--muted);font-weight:500;margin-top:1px}
+  .status-btns{display:flex;gap:5px;flex:0 0 auto}
+  .sbtn{
+    border:1px solid var(--line);background:#fff;border-radius:9px;padding:5px 8px;font-size:10.5px;
+    font-weight:700;cursor:pointer;color:var(--muted);font-family:inherit;min-width:30px;
+  }
+  .sbtn.on-have{background:var(--green);border-color:var(--green);color:#fff}
+  .sbtn.on-need{background:var(--amber);border-color:var(--amber);color:#fff}
+  .sbtn.on-out{background:var(--red);border-color:var(--red);color:#fff}
+  .g-item.done .g-name{text-decoration:line-through;color:var(--muted)}
+
+  .empty-state{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px;line-height:1.5}
+  .empty-state .big{font-size:34px;display:block;margin-bottom:8px}
+
+  /* Buttons */
+  .btn{
+    background:var(--green);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-size:14px;
+    font-weight:700;cursor:pointer;font-family:inherit;width:100%;box-shadow:var(--shadow);
+  }
+  .btn.ghost{background:#fff;color:var(--green-d);border:1px solid var(--line)}
+  .btn.mini{width:auto;padding:8px 13px;font-size:12.5px;border-radius:10px}
+  .btnrow{display:flex;gap:8px;margin:4px 0 18px}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(20,18,15,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+  .overlay.show{display:flex}
+  .sheet{
+    background:var(--bg);width:100%;max-width:640px;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;
+    padding:18px 18px calc(24px + env(safe-area-inset-bottom));animation:up .25s ease;
+  }
+  @keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
+  .sheet h3{margin:0 0 3px;font-size:18px}
+  .sheet .sub{color:var(--muted);font-size:12.5px;margin:0 0 16px}
+  label.fl{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 5px}
+  .inp{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
+  .hint{font-size:11.5px;color:var(--muted);margin:4px 2px 0}
+  .seg{display:flex;background:var(--cream);border-radius:11px;padding:3px;gap:3px;margin-top:2px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--green-d);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .sheet-actions{display:flex;gap:8px;margin-top:22px}
+  .sheet-actions .btn{flex:1}
+  .del-link{text-align:center;margin-top:14px}
+  .del-link button{background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+
+  .summary-line{font-size:12.5px;color:var(--muted);margin:-4px 0 14px}
+  .legend{display:flex;gap:12px;font-size:11px;color:var(--muted);margin:-2px 0 14px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:4px}
+  .dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>🍲 <span id="planTitle">Meal Planner</span></h1>
+    <select class="planpick" id="planPick" onchange="switchPlan(this.value)"></select>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+
+<nav class="tabs">
+  <button id="tab-week" class="active" onclick="go('week')"><span class="ic">📅</span>This Week</button>
+  <button id="tab-month" onclick="go('month')"><span class="ic">🗓️</span>Month</button>
+  <button id="tab-grocery" onclick="go('grocery')"><span class="ic">🛒</span>Grocery</button>
+  <button id="tab-grand" onclick="go('grand')"><span class="ic">📋</span>Grand List</button>
+</nav>
+
+<!-- Meal editor sheet -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ DATA ============ */
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const SLOTS=["breakfast","lunch","dinner"];
+const SLOT_LABEL={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner"};
+const KEY="mealPlannerData_v1";
+
+function blankMeal(){return{name:"",ingredients:[],sides:[],recipeType:"none",url:"",book:"",page:"",note:""};}
+function blankDay(){const d={};DAYS.forEach(dn=>{d[dn]={theme:"",breakfast:blankMeal(),lunch:blankMeal(),dinner:blankMeal()};});return d;}
+function blankWeek(i){return{name:"Week "+(i+1),days:blankDay()};}
+function blankPlan(name){return{name:name,weeks:[0,1,2,3].map(blankWeek)};}
+
+function freshData(){
+  return {plans:{p1:blankPlan("My Plan")}, order:["p1"], active:"p1", currentWeek:0, selWeek:0,
+          status:{}, checked:{}};
+}
+
+let D=load();
+function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);if(d&&d.plans)return d;}}catch(e){}
+  return freshData();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(D));}
+function plan(){return D.plans[D.active];}
+function statusKey(name){return (name||"").trim().toLowerCase();}
+
+/* ============ NAV ============ */
+let TAB="week";
+function go(t){TAB=t;document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');render();window.scrollTo(0,0);}
+
+/* ============ PLANS ============ */
+function renderPlanPick(){
+  const sel=document.getElementById('planPick');
+  sel.innerHTML=D.order.map(id=>`<option value="${id}" ${id===D.active?'selected':''}>${esc(D.plans[id].name)}</option>`).join('')
+    +`<option value="__new">+ New plan…</option>`+`<option value="__ren">✎ Rename…</option>`
+    +(D.order.length>1?`<option value="__del">🗑 Delete plan…</option>`:'');
+  document.getElementById('planTitle').textContent=plan().name;
+}
+function switchPlan(v){
+  if(v==="__new"){const n=prompt("Name this plan (e.g. Summer, Winter):");renderPlanPick();
+    if(n){const id="p"+Date.now();D.plans[id]=blankPlan(n.trim());D.order.push(id);D.active=id;D.selWeek=0;save();renderPlanPick();render();toast("Plan added");}return;}
+  if(v==="__ren"){const n=prompt("Rename plan:",plan().name);if(n){plan().name=n.trim();save();}renderPlanPick();render();return;}
+  if(v==="__del"){if(confirm("Delete plan \""+plan().name+"\"? This can't be undone.")){delete D.plans[D.active];D.order=D.order.filter(x=>x!==D.active);D.active=D.order[0];D.selWeek=0;save();}renderPlanPick();render();return;}
+  D.active=v;D.selWeek=0;save();renderPlanPick();render();
+}
+
+/* ============ RENDER ============ */
+function render(){
+  renderPlanPick();
+  const v=document.getElementById('view');
+  if(TAB==="week")v.innerHTML=viewWeek();
+  else if(TAB==="month")v.innerHTML=viewMonth();
+  else if(TAB==="grocery")v.innerHTML=viewGrocery(false);
+  else if(TAB==="grand")v.innerHTML=viewGrocery(true);
+}
+
+function weekStrip(){
+  return `<div class="weekstrip">`+plan().weeks.map((w,i)=>
+    `<div class="weekpill ${i===D.selWeek?'sel':''} ${i===D.currentWeek?'current':''}" onclick="selWeek(${i})">
+       ${esc(w.name)}<small>${countMeals(w)} meals</small></div>`).join('')+`</div>`;
+}
+function selWeek(i){D.selWeek=i;save();render();}
+
+function viewWeek(){
+  const w=plan().weeks[D.selWeek];
+  let h=weekStrip();
+  h+=`<div class="btnrow">
+    <button class="btn ghost mini" onclick="setCurrent(${D.selWeek})">${D.selWeek===D.currentWeek?'✓ This is my current week':'Set as current week'}</button>
+  </div>`;
+  DAYS.forEach(dn=>{
+    const day=w.days[dn];
+    const filled=SLOTS.filter(s=>day[s].name).length;
+    h+=`<div class="card">
+      <div class="day-head" onclick="toggleDay(this)">
+        <div><span class="dn">${dn}</span> ${day.theme?`<span class="dtheme">${esc(day.theme)}</span>`:''}</div>
+        <span class="chev">▸</span>
+      </div>
+      <div class="day-body">
+        ${SLOTS.map(s=>mealBlock(dn,s,day[s])).join('')}
+        <div style="padding:10px 0 12px"><button class="btn ghost mini" onclick="editTheme('${dn}')">✎ Day label${day.theme?'':' (e.g. Taco Tuesday)'}</button></div>
+      </div>
+    </div>`;
+  });
+  return h;
+}
+
+function mealBlock(dn,slot,m){
+  const has=!!m.name;
+  let meta='';
+  if(has){
+    meta+='<div class="meal-meta">';
+    if(m.ingredients.length)meta+=`<div class="tagrow">${m.ingredients.map(i=>`<span class="tag">${esc(i)}</span>`).join('')}</div>`;
+    if(m.sides.length)meta+=`<div class="tagrow">${m.sides.map(i=>`<span class="tag side">+ ${esc(i)}</span>`).join('')}</div>`;
+    if(m.recipeType==="link"&&m.url)meta+=`<a class="recipe-link" href="${esc(m.url)}" target="_blank" rel="noopener">🔗 Open recipe</a>`;
+    if(m.recipeType==="book"&&(m.book||m.page))meta+=`<div class="recipe-book">📖 ${esc(m.book)}${m.page?', p.'+esc(m.page):''}</div>`;
+    if(m.note)meta+=`<div class="hint">📝 ${esc(m.note)}</div>`;
+    meta+='</div>';
+  }
+  return `<div class="meal">
+    <div class="meal-top">
+      <div style="flex:1">
+        <div class="meal-slot">${SLOT_LABEL[slot]}</div>
+        <div class="meal-name ${has?'':'empty'}">${has?esc(m.name):'Tap to add'}</div>
+      </div>
+      <button class="meal-edit" onclick="openMeal('${dn}','${slot}')">✎</button>
+    </div>${meta}
+  </div>`;
+}
+
+function viewMonth(){
+  let h=`<h2 class="section">Month Overview</h2>`;
+  plan().weeks.forEach((w,i)=>{
+    h+=`<div class="card"><div class="day-head" style="cursor:default">
+      <div><span class="dn">${esc(w.name)}</span> ${i===D.currentWeek?'<span class="dtheme">● current</span>':''}</div>
+      <button class="btn ghost mini" onclick="D.selWeek=${i};go('week')">Open ›</button></div>
+      <div class="day-body open" style="border-top:1px solid var(--line)">`;
+    DAYS.forEach(dn=>{
+      const dinner=w.days[dn].dinner;
+      h+=`<div style="padding:8px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;font-size:13px;min-width:78px;color:var(--muted)">${dn.slice(0,3)}</span>
+        <span style="flex:1;font-size:14px;${dinner.name?'':'color:var(--muted);font-style:italic'}">${dinner.name?esc(dinner.name):'—'}${w.days[dn].theme?` <span style="color:var(--green-d);font-size:11px">· ${esc(w.days[dn].theme)}</span>`:''}</span>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`<p class="summary-line" style="text-align:center">Showing dinners. Tap “Open” to edit a full week.</p>`;
+  return h;
+}
+
+/* ---- Grocery aggregation ---- */
+function collectItems(weeks){
+  // returns map: key -> {name, count, uses:Set(mealNames)}
+  const map={};
+  weeks.forEach(w=>{
+    DAYS.forEach(dn=>SLOTS.forEach(s=>{
+      const m=w.days[dn][s];if(!m.name)return;
+      [...m.ingredients,...m.sides].forEach(raw=>{
+        const nm=raw.trim();if(!nm)return;const k=statusKey(nm);
+        if(!map[k])map[k]={name:nm,count:0,uses:new Set()};
+        map[k].count++;map[k].uses.add(m.name);
+      });
+    }));
+  });
+  return map;
+}
+function cycleStatus(k){
+  const order=["","need","out","have"];
+  const cur=D.status[k]||"";
+  const next=order[(order.indexOf(cur)+1)%order.length];
+  if(next==="")delete D.status[k];else D.status[k]=next;
+  save();render();
+}
+function setStatus(k,v){if(D.status[k]===v)delete D.status[k];else D.status[k]=v;save();render();}
+
+function viewGrocery(grand){
+  const weeks=grand?plan().weeks:[plan().weeks[D.selWeek]];
+  let h=grand?`<h2 class="section">Grand List · whole month</h2>`:weekStrip()+`<h2 class="section">Grocery list · ${esc(plan().weeks[D.selWeek].name)}</h2>`;
+  const map=collectItems(weeks);
+  const keys=Object.keys(map).sort((a,b)=>map[a].name.localeCompare(map[b].name));
+  if(!keys.length){return h+emptyState("No ingredients yet","Add meals with ingredients and your shopping list builds itself.");}
+  h+=`<div class="legend">
+    <span><i class="dot" style="background:var(--red)"></i>Out</span>
+    <span><i class="dot" style="background:var(--amber)"></i>Need more</span>
+    <span><i class="dot" style="background:var(--green)"></i>Have enough</span>
+    <span style="color:var(--muted)">Tap a letter to set. Set “Have” to cross it off.</span>
+  </div>`;
+  const toBuy=keys.filter(k=>D.status[k]!=="have").length;
+  h+=`<p class="summary-line">${keys.length} items · ${toBuy} still to buy</p>`;
+  keys.forEach(k=>{
+    const it=map[k];const st=D.status[k]||"";
+    const shared=it.uses.size>1?`<span class="used">used in ${[...it.uses].map(esc).join(', ')}</span>`:'';
+    h+=`<div class="g-item ${st==='have'?'done':''}">
+      <div class="g-name">${esc(it.name)}${it.count>1?` <span style="color:var(--muted);font-weight:600">×${it.count}</span>`:''}${shared}</div>
+      <div class="status-btns">
+        <button class="sbtn ${st==='out'?'on-out':''}" onclick="setStatus('${k}','out')">Out</button>
+        <button class="sbtn ${st==='need'?'on-need':''}" onclick="setStatus('${k}','need')">Low</button>
+        <button class="sbtn ${st==='have'?'on-have':''}" onclick="setStatus('${k}','have')">Got</button>
+      </div>
+    </div>`;
+  });
+  return h;
+}
+function emptyState(t,s){return `<div class="empty-state"><span class="big">🛒</span><strong>${t}</strong><br>${s}</div>`;}
+
+/* ============ INTERACTIONS ============ */
+function toggleDay(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');}
+function setCurrent(i){D.currentWeek=i;save();render();toast("Marked as current week");}
+
+let editing=null; // {dn, slot}
+function openMeal(dn,slot){
+  editing={dn,slot};
+  const m=plan().weeks[D.selWeek].days[dn][slot];
+  const s=document.getElementById('sheet');
+  s.innerHTML=`
+    <h3>${SLOT_LABEL[slot]} · ${dn}</h3>
+    <p class="sub">${esc(plan().weeks[D.selWeek].name)}</p>
+
+    <label class="fl">Meal</label>
+    <input class="inp" id="f_name" placeholder="e.g. Chicken fajitas" value="${esc(m.name)}">
+
+    <label class="fl">Ingredients</label>
+    <textarea class="inp" id="f_ing" placeholder="One per line, or comma-separated">${m.ingredients.join('\n')}</textarea>
+    <p class="hint">These roll up into your grocery list.</p>
+
+    <label class="fl">Sides that go with it</label>
+    <textarea class="inp" id="f_side" placeholder="e.g. rice, black beans, corn">${m.sides.join('\n')}</textarea>
+    <p class="hint">The “didn’t I need a side?” safety net. Swap freely week to week.</p>
+
+    <label class="fl">Recipe</label>
+    <div class="seg" id="rtype">
+      <button data-t="none" class="${m.recipeType==='none'||!m.recipeType?'on':''}" onclick="pickRType('none')">None</button>
+      <button data-t="link" class="${m.recipeType==='link'?'on':''}" onclick="pickRType('link')">🔗 Link</button>
+      <button data-t="book" class="${m.recipeType==='book'?'on':''}" onclick="pickRType('book')">📖 Cookbook</button>
+    </div>
+    <div id="r_link" style="display:${m.recipeType==='link'?'block':'none'}">
+      <label class="fl">Recipe URL</label>
+      <input class="inp" id="f_url" placeholder="Paste Pinterest / website link" value="${esc(m.url)}">
+    </div>
+    <div id="r_book" style="display:${m.recipeType==='book'?'block':'none'}">
+      <label class="fl">Cookbook</label>
+      <input class="inp" id="f_book" placeholder="e.g. Magnolia Table, Vol. 2" value="${esc(m.book)}">
+      <label class="fl">Page</label>
+      <input class="inp" id="f_page" placeholder="e.g. 142" value="${esc(m.page)}">
+    </div>
+
+    <label class="fl">Notes</label>
+    <input class="inp" id="f_note" placeholder="Anything to remember" value="${esc(m.note)}">
+
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn" onclick="saveMeal()">Save</button>
+    </div>
+    ${m.name?'<div class="del-link"><button onclick="clearMeal()">Clear this meal</button></div>':''}
+  `;
+  document.getElementById('overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+let curRType='none';
+function pickRType(t){curRType=t;document.querySelectorAll('#rtype button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.getElementById('r_link').style.display=t==='link'?'block':'none';
+  document.getElementById('r_book').style.display=t==='book'?'block':'none';}
+function splitList(v){return v.split(/[\n,]/).map(x=>x.trim()).filter(Boolean);}
+function saveMeal(){
+  const m=plan().weeks[D.selWeek].days[editing.dn][editing.slot];
+  m.name=document.getElementById('f_name').value.trim();
+  m.ingredients=splitList(document.getElementById('f_ing').value);
+  m.sides=splitList(document.getElementById('f_side').value);
+  m.recipeType=curRType;
+  m.url=document.getElementById('f_url')?.value.trim()||"";
+  m.book=document.getElementById('f_book')?.value.trim()||"";
+  m.page=document.getElementById('f_page')?.value.trim()||"";
+  m.note=document.getElementById('f_note').value.trim();
+  save();closeSheet();render();toast("Saved");
+}
+function clearMeal(){const m=plan().weeks[D.selWeek].days[editing.dn][editing.slot];
+  Object.assign(m,blankMeal());save();closeSheet();render();toast("Cleared");}
+function closeSheet(){document.getElementById('overlay').classList.remove('show');document.body.style.overflow='';}
+
+function editTheme(dn){
+  const day=plan().weeks[D.selWeek].days[dn];
+  const n=prompt("Day label for "+dn+" (e.g. Taco Tuesday, Fun Friday, Try-it Thursday):",day.theme);
+  if(n!==null){day.theme=n.trim();save();render();}
+}
+
+/* open the meal sheet also from tapping empty name */
+document.addEventListener('click',e=>{
+  const nm=e.target.closest('.meal-name');
+  if(nm){const meal=nm.closest('.meal');const btn=meal.querySelector('.meal-edit');if(btn)btn.click();}
+});
+
+/* ============ UTIL ============ */
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function countMeals(w){let n=0;DAYS.forEach(dn=>SLOTS.forEach(s=>{if(w.days[dn][s].name)n++;}));return n;}
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1600);}
+
+/* auto-derive current week of month on first load of a session */
+(function initCurrent(){
+  const wk=Math.min(3,Math.floor((new Date().getDate()-1)/7));
+  if(D.currentWeek==null)D.currentWeek=wk;
+  if(D.selWeek==null)D.selWeek=D.currentWeek;
+})();
+
+render();
+</script>
+</body>
+</html>
