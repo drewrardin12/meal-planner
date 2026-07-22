@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
 
 <style>
   :root{
@@ -77,6 +78,7 @@
   .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--divider)}
   .btn.mini{width:auto;padding:9px 14px;font-size:13px;border-radius:12px}
   .btn.danger{background:transparent;color:var(--terracotta);border:1px solid var(--terracotta)}
+  .btn.danger.mini{width:auto;padding:9px 14px;font-size:13px;border-radius:12px}
   .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
   /* Today */
@@ -364,7 +366,7 @@ function render(){
   else{tl.className='screen-title';tl.textContent=({plan:'Plan',grocery:'Grocery',more:'More'})[TAB];
     if(TAB==='plan')v.innerHTML=viewPlan();
     else if(TAB==='grocery')v.innerHTML=viewGrocery();
-    else v.innerHTML=stub('⋯','More','Plans, JSON backup (export / import), and the privacy note arrive in the final batch.');
+    else v.innerHTML=viewMore();
   }
 }
 function renderPlanCtl(){
@@ -765,6 +767,107 @@ function gItem(k,it,idx){
   </div>`;
 }
 
+/* ============ MORE: plans, backup, about ============ */
+function countFilled(p){let n=0;p.weeks.forEach(w=>w.days.forEach(d=>SLOTS.forEach(s=>{if(d.meals[s]&&d.meals[s].name)n++;})));return n;}
+function blankPlanNew(name){
+  const weeks=[0,1,2,3].map(i=>({id:uid(),index:i+1,label:null,
+    days:DAYS.map(dn=>({weekday:dn.toLowerCase(),themeLabel:THEME[dn],meals:{breakfast:null,lunch:null,dinner:null}})),
+    dessert:null}));
+  return {id:uid(),name:name,createdAt:nowISO(),updatedAt:nowISO(),currentWeek:0,weeks:weeks};
+}
+function viewMore(){
+  let h=`<p class="section-label">Plans</p><div class="stack">`;
+  D.planOrder.forEach(id=>{
+    const p=D.plans[id], act=id===D.activePlanId;
+    h+=`<div class="card" style="padding:14px 16px">
+      <div class="row-between">
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:15px">${esc(p.name)} ${act?'<span style="color:var(--sage);font-size:12px">· Active</span>':''}</div>
+          <div class="muted" style="font-size:12px">${countFilled(p)} meals planned</div>
+        </div>
+        <div style="display:flex;gap:6px;flex:0 0 auto">
+          ${act?'':`<button class="btn ghost mini" onclick="setActivePlan('${id}')">Use</button>`}
+          <button class="btn ghost mini" onclick="renamePlan('${id}')">Rename</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn ghost mini" onclick="seedInto('${id}')">Load starter meals</button>
+        ${D.planOrder.length>1?`<button class="btn danger mini" onclick="deletePlan('${id}')">Delete</button>`:''}
+      </div>
+    </div>`;
+  });
+  h+=`</div>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="btn ghost mini" onclick="createPlan()">＋ New plan</button>
+    <button class="btn ghost mini" onclick="duplicatePlan()">⧉ Duplicate active</button>
+  </div>
+
+  <p class="section-label" style="margin-top:30px">Backup</p>
+  <div class="card" style="padding:16px">
+    <p class="muted" style="margin:0 0 12px;font-size:13px">Save a copy of everything, or restore from a file. A safety backup downloads automatically before any import replaces your data.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" onclick="exportBackup()">⬇ Export backup (.json)</button>
+      <label class="btn ghost" style="text-align:center;cursor:pointer;display:block">⬆ Import backup…
+        <input type="file" accept="application/json,.json" style="display:none" onchange="importFile(this)">
+      </label>
+    </div>
+  </div>
+
+  <p class="section-label" style="margin-top:30px">About</p>
+  <div class="card" style="padding:16px">
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.6"><strong>Your plans are stored in this browser, on this device.</strong> Plated has no account or cloud sync. Export a backup before clearing browser data or switching devices.</p>
+    <p class="muted" style="margin:0;font-size:12px">Plated · v1.0 · local-first PWA</p>
+  </div>`;
+  return h;
+}
+function setActivePlan(id){D.activePlanId=id;D.ui.selW=plan().currentWeek||0;save();render();toast('Switched to '+D.plans[id].name);}
+function createPlan(){const n=prompt('Name this plan (e.g. Summer, Winter):');if(n===null)return;const nm=n.trim().slice(0,50);if(!nm)return;const p=blankPlanNew(nm);D.plans[p.id]=p;D.planOrder.push(p.id);D.activePlanId=p.id;D.ui.selW=0;save();render();toast('Plan created');}
+function duplicatePlan(){const copy=JSON.parse(JSON.stringify(plan()));copy.id=uid();copy.name=(plan().name+' (copy)').slice(0,50);copy.createdAt=nowISO();copy.updatedAt=nowISO();D.plans[copy.id]=copy;D.planOrder.push(copy.id);D.activePlanId=copy.id;D.ui.selW=copy.currentWeek||0;save();render();toast('Plan duplicated');}
+function renamePlan(id){const p=D.plans[id];const n=prompt('Rename plan:',p.name);if(n===null)return;const nm=n.trim().slice(0,50);if(!nm)return;p.name=nm;p.updatedAt=nowISO();save();render();}
+function deletePlan(id){const p=D.plans[id];if(!confirm('Delete plan "'+p.name+'"? This cannot be undone.'))return;delete D.plans[id];D.planOrder=D.planOrder.filter(x=>x!==id);if(!D.planOrder.length){const np=seedPlan('My Plan');D.plans[np.id]=np;D.planOrder=[np.id];}if(D.activePlanId===id)D.activePlanId=D.planOrder[0];D.ui.selW=plan().currentWeek||0;save();render();toast('Plan deleted');}
+function seedInto(id){if(!confirm('Load the starter meals into "'+D.plans[id].name+'"? This replaces the meals in this plan.'))return;const nm=D.plans[id].name;const cw=D.plans[id].currentWeek||0;const sp=seedPlan(nm);sp.id=id;sp.currentWeek=cw;D.plans[id]=sp;save();render();toast('Starter meals loaded');}
+
+function download(filename,text){
+  const blob=new Blob([text],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},120);
+}
+function exportBackup(){
+  const data=Object.assign({},D,{exportedAt:nowISO()});delete data.ui;
+  download('plated-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2));
+  toast('Backup downloaded');
+}
+function validateBackup(d){
+  if(typeof d!=='object'||!d)return 'File is not a Plated backup.';
+  if(!d.plans||typeof d.plans!=='object')return 'No plans found in the file.';
+  if(!Array.isArray(d.planOrder)||!d.planOrder.length)return 'Backup has no plan list.';
+  for(const id of d.planOrder){const p=d.plans[id];if(!p)return 'A plan referenced in the list is missing.';
+    if(!Array.isArray(p.weeks)||p.weeks.length!==4)return 'A plan does not have exactly four weeks.';}
+  return null;
+}
+function importFile(input){
+  const file=input.files&&input.files[0];if(!file){return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let parsed;
+    try{parsed=JSON.parse(reader.result);}catch(e){alert('That file is not valid JSON — no changes made.');return;}
+    const err=validateBackup(parsed);
+    if(err){alert('Import canceled: '+err+'\nNo changes were made.');return;}
+    if(!confirm('Replace ALL current data with this backup? Your current plans will be overwritten.')){return;}
+    try{exportBackup();}catch(e){}
+    parsed.schemaVersion=SCHEMA;
+    parsed.settings=parsed.settings||{theme:'dark'};
+    parsed.groceryStatuses=parsed.groceryStatuses||{};
+    if(!parsed.activePlanId||!parsed.plans[parsed.activePlanId])parsed.activePlanId=parsed.planOrder[0];
+    parsed.ui={};delete parsed.exportedAt;
+    D=parsed;save();nav('today');toast('Backup restored');
+  };
+  reader.onerror=()=>alert('Could not read that file.');
+  reader.readAsText(file);
+  input.value='';
+}
+
 /* ============ UTIL ============ */
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastT;
@@ -777,6 +880,10 @@ D.ui.selW=plan().currentWeek||0;
 D.ui.planView='week';
 save();
 render();
+
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+}
 </script>
 </body>
 </html>
