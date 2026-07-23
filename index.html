@@ -60,13 +60,17 @@
     border-top:1px solid var(--divider);display:flex;padding-bottom:env(safe-area-inset-bottom);
   }
   nav.tabs button{
-    flex:1;background:none;border:none;padding:10px 4px 9px;cursor:pointer;color:var(--muted);
-    font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:56px;
+    flex:1;background:none;border:none;padding:14px 4px;cursor:pointer;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;min-height:56px;
   }
-  nav.tabs button .ic{font-size:20px;line-height:1}
+  nav.tabs button svg{width:24px;height:24px;display:block}
   nav.tabs button[aria-current="page"]{color:var(--sage)}
+  .ic-sm{width:16px;height:16px;vertical-align:-3px}
+  .ic-lg{width:30px;height:30px}
+  .brand svg{color:var(--sage)}
+  .btn svg.ic-sm,.seg button svg.ic-sm{margin-right:2px}
 
-  main{padding-top:18px;min-height:60vh}
+  main{padding-top:22px;min-height:60vh}
 
   /* Generic */
   .muted{color:var(--muted)}
@@ -221,10 +225,11 @@
 <main class="wrap" id="view" role="main"></main>
 
 <nav class="tabs" aria-label="Primary">
-  <button id="nav-today"   onclick="nav('today')"   aria-current="page"><span class="ic">🗓️</span>Today</button>
-  <button id="nav-plan"    onclick="nav('plan')"><span class="ic">📖</span>Plan</button>
-  <button id="nav-grocery" onclick="nav('grocery')"><span class="ic">🛒</span>Grocery</button>
-  <button id="nav-more"    onclick="nav('more')"><span class="ic">⋯</span>More</button>
+  <button id="nav-today" onclick="nav('today')" aria-current="page" aria-label="Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.7 12 4l9 6.7"/><path d="M5.5 9.6V20h13V9.6"/></svg></button>
+  <button id="nav-week" onclick="nav('week')" aria-label="Week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3M7.5 14h9"/></svg></button>
+  <button id="nav-month" onclick="nav('month')" aria-label="Month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01M16 16.5h.01" stroke-width="2.3"/></svg></button>
+  <button id="nav-grocery" onclick="nav('grocery')" aria-label="Groceries"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l1.8 10.2a1.4 1.4 0 0 0 1.4 1.1h8.2a1.4 1.4 0 0 0 1.4-1.1L20 7.5H6.2"/><circle cx="9" cy="19.5" r="1.2"/><circle cx="17" cy="19.5" r="1.2"/></svg></button>
+  <button id="nav-more" onclick="nav('more')" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/></svg></button>
 </nav>
 
 <!-- Full-screen panel for meal detail / editor -->
@@ -251,8 +256,32 @@ const SLOT_LABEL={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner"};
 const KEY="platedData_v1";
 const OLD_KEY="mealPlannerData_v1";
 const SCHEMA=1;
-const BUILD="Saffron";          // build codeword — bump on each shipped change
+const BUILD="Thyme";            // build codeword — bump on each shipped change
 const BUILD_DATE="Jul 23, 2026";
+
+/* ---- inline line icons (no emoji anywhere) ---- */
+function svg(inner,cls){return `<svg class="${cls||'ic-sm'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;}
+const IC={
+  link:svg('<path d="M9.5 14.5 14.5 9.5"/><path d="M11 7.5l1-1a3.4 3.4 0 0 1 4.8 4.8l-1 1"/><path d="M13 16.5l-1 1a3.4 3.4 0 0 1-4.8-4.8l1-1"/>'),
+  book:svg('<path d="M4 5.5A1.8 1.8 0 0 1 5.8 4H11v15H5.8A1.8 1.8 0 0 0 4 20.3z"/><path d="M20 5.5A1.8 1.8 0 0 0 18.2 4H13v15h5.2a1.8 1.8 0 0 1 1.8 1.3z"/>'),
+  pencil:svg('<path d="M13.5 5.5l3 3"/><path d="M4.5 20l1-4 9.5-9.5 3 3L8.5 19z"/>'),
+  plus:svg('<path d="M12 5v14M5 12h14"/>'),
+  plusC:svg('<circle cx="12" cy="12" r="8.2"/><path d="M12 8.5v7M8.5 12h7"/>'),
+  down:svg('<path d="M12 4v10M8 10.5l4 4 4-4"/><path d="M5 19.5h14"/>'),
+  up:svg('<path d="M12 15V5M8 8.5l4-4 4 4"/><path d="M5 19.5h14"/>'),
+  copy:svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  chevL:svg('<path d="M14.5 6l-6 6 6 6"/>'),
+  chevR:svg('<path d="M9.5 6l6 6-6 6"/>'),
+  check:svg('<path d="M5 12.5l4.5 4.5L19 7"/>'),
+  x:svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  basket:svg('<path d="M5 9h14l-1.3 10.2a1.4 1.4 0 0 1-1.4 1.3H7.7a1.4 1.4 0 0 1-1.4-1.3z"/><path d="M9 9 12 4l3 5"/>','ic-lg'),
+  dessert:svg('<path d="M5 13h14l-1.4 6.5a1.4 1.4 0 0 1-1.4 1.1H7.8a1.4 1.4 0 0 1-1.4-1.1z"/><path d="M8 13a4 4 0 0 1 8 0"/><path d="M12 6v3"/>'),
+  swap:svg('<path d="M7 8h11l-3-3M17 16H6l3 3"/>'),
+  note:svg('<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/>')
+};
+const LOGO_MARK=`<svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M14 6v28"/><path d="M11 6v6M14 6v6M17 6v6"/><path d="M11 12c0 2 6 2 6 0"/>
+  <path d="M21 8h4a7 7 0 0 1 0 14h-4"/></svg>`;
 
 function uid(){return "id_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7);}
 function nowISO(){return new Date().toISOString();}
@@ -357,7 +386,8 @@ function nav(t){
     D.ui.todayW=plan().currentWeek||0;
     D.ui.todayD=(new Date().getDay()+6)%7;
   }
-  if(t==='plan'){ D.ui.planView='week'; if(D.ui.selW==null)D.ui.selW=plan().currentWeek||0; }
+  if(t==='week'){ D.ui.planView='week'; if(D.ui.selW==null)D.ui.selW=plan().currentWeek||0; }
+  if(t==='month'){ if(D.ui.selW==null)D.ui.selW=plan().currentWeek||0; }
   if(t==='grocery'){ D.groceryStatuses=D.groceryStatuses||{};
     if(D.ui.gScope==null)D.ui.gScope='week'; if(D.ui.gWeek==null)D.ui.gWeek=plan().currentWeek||0;
     if(D.ui.gFilter==null)D.ui.gFilter='all'; }
@@ -367,9 +397,11 @@ function render(){
   renderPlanCtl();
   const v=document.getElementById('view');
   const tl=document.getElementById('topLeft');
-  if(TAB==='today'){tl.className='brand';tl.innerHTML='<span class="mono">P</span>lated';v.innerHTML=viewToday();}
-  else{tl.className='screen-title';tl.textContent=({plan:'Plan',grocery:'Grocery',more:'More'})[TAB];
-    if(TAB==='plan')v.innerHTML=viewPlan();
+  if(TAB==='today'){tl.className='brand';tl.innerHTML=LOGO_MARK+'<span>Plated</span>';v.innerHTML=viewToday();}
+  else{tl.className='screen-title';
+    tl.textContent=({week:'Week '+((D.ui.selW||0)+1),month:'Month Overview',grocery:'Groceries',more:'More'})[TAB];
+    if(TAB==='week')v.innerHTML=viewPlan();
+    else if(TAB==='month')v.innerHTML=viewMonth();
     else if(TAB==='grocery')v.innerHTML=viewGrocery();
     else v.innerHTML=viewMore();
   }
@@ -377,7 +409,7 @@ function render(){
 function renderPlanCtl(){
   const sel=document.getElementById('planCtl');
   sel.innerHTML=D.planOrder.map(id=>`<option value="${id}" ${id===D.activePlanId?'selected':''}>${esc(D.plans[id].name)}</option>`).join('');
-  sel.style.display=(TAB==='today'||TAB==='plan'||TAB==='grocery')?'':'none';
+  sel.style.display=(TAB==='today'||TAB==='week'||TAB==='grocery')?'':'none';
 }
 function onPlanCtl(v){D.activePlanId=v;D.ui.selW=plan().currentWeek||0;save();render();}
 function stub(icon,title,msg){return `<div class="stub"><span class="big">${icon}</span><h3>${title}</h3><p>${msg}</p></div>`;}
@@ -414,10 +446,10 @@ function mealRowToday(w,di,slot,m){
       <span class="slot">${SLOT_LABEL[slot]}</span>
       <span class="name ${has?'':'empty'}">${has?esc(m.name):'Add meal'}</span>
     </span>
-    ${has?`<span class="glyph">${glyph}</span>`:'<span class="add">＋</span>'}
+    ${has?`<span class="glyph">${glyph}</span>`:`<span class="add">${IC.plusC}</span>`}
   </button>`;
 }
-function recipeGlyph(m){if(!m.recipe)return '';if(m.recipe.type==='link')return '🔗';if(m.recipe.type==='cookbook')return '📖';return '';}
+function recipeGlyph(m){if(!m.recipe)return '';if(m.recipe.type==='link')return IC.link;if(m.recipe.type==='cookbook')return IC.book;return '';}
 function stepToday(dir){
   let d=D.ui.todayD+dir, w=D.ui.todayW;
   if(d>6){d=0;w=Math.min(3,w+1);} if(d<0){d=6;w=Math.max(0,w-1);}
@@ -438,8 +470,8 @@ function viewWeek(){
   });
   h+=`</div>
   <div class="row-between" style="margin:4px 0 14px">
-    <button class="btn ghost mini" onclick="setCurrentWeek(${w})">${w===cur?'✓ Current week':'Set as current'}</button>
-    <button class="btn ghost mini" onclick="D.ui.planView='month';render()">Four-week overview ›</button>
+    <button class="btn ghost mini" onclick="setCurrentWeek(${w})">${w===cur?IC.check+' Current week':'Set as current'}</button>
+    <button class="btn ghost mini" onclick="nav('month')">Four-week overview ›</button>
   </div>
   <p class="section-label">Dinners · tap a day for all meals</p>
   <div class="stack">`;
@@ -461,7 +493,7 @@ function viewWeek(){
 function dessertCard(w){
   const m=plan().weeks[w].dessert, has=m&&m.name;
   return `<div class="dessert-card" onclick="openDessert(${w})">
-    <span class="lab">🍮 Once this week</span>
+    <span class="lab">${IC.dessert} Once this week</span>
     <div class="nm ${has?'':'empty'}">${has?esc(m.name):'Add a weekly dessert'}</div>
   </div>`;
 }
@@ -474,7 +506,7 @@ function viewDay(){
   <h1 class="today-weekday" style="font-size:30px;margin:16px 0 2px">${DAYS[di]}</h1>
   <p class="today-date">Week ${w+1} template</p>
   <div class="context-row">
-    <button class="btn ghost mini" onclick="editDayLabel(${w},${di})">${day.themeLabel?'✎ '+esc(day.themeLabel):'✎ Add day label'}</button>
+    <button class="btn ghost mini" onclick="editDayLabel(${w},${di})">${IC.pencil} ${day.themeLabel?esc(day.themeLabel):'Add day label'}</button>
     <span class="daynav">
       <button class="chevbtn" aria-label="Previous day" onclick="stepDay(-1)">‹</button>
       <button class="chevbtn" aria-label="Next day" onclick="stepDay(1)">›</button>
@@ -492,7 +524,7 @@ function mealRowPlan(w,di,slot,m){
       <span class="slot">${SLOT_LABEL[slot]}</span>
       <span class="name ${has?'':'empty'}">${has?esc(m.name):'Add meal'}</span>
     </span>
-    ${has?`<span class="glyph">${recipeGlyph(m)}</span>`:'<span class="add">＋</span>'}
+    ${has?`<span class="glyph">${recipeGlyph(m)}</span>`:`<span class="add">${IC.plusC}</span>`}
   </button>`;
 }
 function openDay(w,di){D.ui.selW=w;D.ui.dayD=di;D.ui.planView='day';render();window.scrollTo(0,0);}
@@ -503,8 +535,7 @@ function editDayLabel(w,di){
   if(n!==null){day.themeLabel=n.trim()||null;plan().updatedAt=nowISO();save();render();}
 }
 function viewMonth(){
-  let h=`<button class="btn ghost mini" onclick="D.ui.planView='week';render()">‹ Week view</button>
-  <p class="section-label" style="margin-top:16px">Four-week overview · dinners</p>`;
+  let h=`<p class="section-label" style="margin-top:6px">Four-week overview · dinners</p>`;
   plan().weeks.forEach((wk,i)=>{
     h+=`<div class="monthweek"><div class="mh">
       <span class="t">Week ${i+1} ${i===(plan().currentWeek||0)?'<span style="color:var(--amber);font-size:12px">· Now</span>':''}</span>
@@ -518,7 +549,7 @@ function viewMonth(){
   });
   return h;
 }
-function openWeekFromMonth(i){D.ui.selW=i;D.ui.planView='week';render();window.scrollTo(0,0);}
+function openWeekFromMonth(i){D.ui.selW=i;D.ui.planView='week';nav('week');window.scrollTo(0,0);}
 
 /* ============ MEAL DETAIL + EDITOR (full-screen panel) ============ */
 let panelMode=null;      // 'detail' | 'editor'
@@ -559,8 +590,8 @@ function renderDetail(){
   }
   if(m.recipe&&m.recipe.type!=='none'){
     h+=`<div class="detail-sec"><h4>Recipe</h4><div class="recipe-box">`;
-    if(m.recipe.type==='link'&&m.recipe.url)h+=`<a href="${esc(m.recipe.url)}" target="_blank" rel="noopener noreferrer">🔗 Open recipe</a>`;
-    else if(m.recipe.type==='cookbook')h+=`<span class="cookbook">📖 ${esc(m.recipe.bookTitle||'')}${m.recipe.volume?', '+esc(m.recipe.volume):''}${m.recipe.page?', p. '+esc(m.recipe.page):''}</span>`;
+    if(m.recipe.type==='link'&&m.recipe.url)h+=`<a href="${esc(m.recipe.url)}" target="_blank" rel="noopener noreferrer">${IC.link} Open recipe</a>`;
+    else if(m.recipe.type==='cookbook')h+=`<span class="cookbook">${IC.book} ${esc(m.recipe.bookTitle||'')}${m.recipe.volume?', '+esc(m.recipe.volume):''}${m.recipe.page?', p. '+esc(m.recipe.page):''}</span>`;
     h+=`</div></div>`;
   }
   if(m.notes){h+=`<div class="detail-sec"><h4>Notes</h4><div class="notes-box">${esc(m.notes)}</div></div>`;}
@@ -598,8 +629,8 @@ function openEditorRef(){
     <label class="fl">Recipe</label>
     <div class="seg" role="group" aria-label="Recipe type">
       <button type="button" data-t="none" aria-pressed="${editRType==='none'}" onclick="pickR('none')">None</button>
-      <button type="button" data-t="link" aria-pressed="${editRType==='link'}" onclick="pickR('link')">🔗 Link</button>
-      <button type="button" data-t="cookbook" aria-pressed="${editRType==='cookbook'}" onclick="pickR('cookbook')">📖 Cookbook</button>
+      <button type="button" data-t="link" aria-pressed="${editRType==='link'}" onclick="pickR('link')">${IC.link} Link</button>
+      <button type="button" data-t="cookbook" aria-pressed="${editRType==='cookbook'}" onclick="pickR('cookbook')">${IC.book} Cookbook</button>
     </div>
     <div id="r_link" style="display:${editRType==='link'?'block':'none'}">
       <label class="fl" for="f_url">Recipe URL</label>
@@ -731,7 +762,7 @@ function viewGrocery(){
     h+=`</div>`;
   }
   if(!keys.length){
-    return h+`<div class="empty-state"><span class="big">🧺</span>No ingredients in this scope yet.<br>Add ingredients to your meals and the list builds itself.</div>`;
+    return h+`<div class="empty-state"><span class="big">${IC.basket}</span>No ingredients in this scope yet.<br>Add ingredients to your meals and the list builds itself.</div>`;
   }
   const active=keys.filter(k=>gStatus(k)!=='got');
   const got=keys.filter(k=>gStatus(k)==='got');
@@ -747,7 +778,7 @@ function viewGrocery(){
   if(D.ui.gFilter==='got'){
     list = got.length ? got.map(k=>gItem(k,map[k],idxOf[k])).join('') : `<p class="muted" style="padding:24px 0;text-align:center">Nothing marked Got yet.</p>`;
   }else{
-    list = active.length ? active.map(k=>gItem(k,map[k],idxOf[k])).join('') : `<p class="muted" style="padding:16px 0;text-align:center">Everything's marked Got 🎉</p>`;
+    list = active.length ? active.map(k=>gItem(k,map[k],idxOf[k])).join('') : `<p class="muted" style="padding:16px 0;text-align:center">Everything's marked Got.</p>`;
     if(D.ui.gFilter==='all'&&got.length){
       list += `<div class="completed-h">Completed · ${got.length}</div>`;
       list += got.map(k=>gItem(k,map[k],idxOf[k])).join('');
@@ -761,7 +792,7 @@ function gItem(k,it,idx){
   const uses=it.uses.length?`<span class="used">Used in ${esc(it.uses.join(', '))}</span>`:'';
   return `<div class="gitem ${st==='got'?'got':''}">
     <div class="ginfo" onclick="gCycle(${idx})">
-      <span class="gname">${st==='got'?'<span class="ck">✓</span>':''}${esc(it.name)}${it.count>1?` <span class="cnt">×${it.count}</span>`:''}</span>
+      <span class="gname">${st==='got'?'<span class="ck">'+IC.check+'</span>':''}${esc(it.name)}${it.count>1?` <span class="cnt">×${it.count}</span>`:''}</span>
       ${uses}
     </div>
     <div class="gstat" role="group" aria-label="Status">
@@ -803,16 +834,16 @@ function viewMore(){
   });
   h+=`</div>
   <div style="display:flex;gap:8px;margin-top:12px">
-    <button class="btn ghost mini" onclick="createPlan()">＋ New plan</button>
-    <button class="btn ghost mini" onclick="duplicatePlan()">⧉ Duplicate active</button>
+    <button class="btn ghost mini" onclick="createPlan()">${IC.plus} New plan</button>
+    <button class="btn ghost mini" onclick="duplicatePlan()">${IC.copy} Duplicate active</button>
   </div>
 
   <p class="section-label" style="margin-top:30px">Backup</p>
   <div class="card" style="padding:16px">
     <p class="muted" style="margin:0 0 12px;font-size:13px">Save a copy of everything, or restore from a file. A safety backup downloads automatically before any import replaces your data.</p>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn" onclick="exportBackup()">⬇ Export backup (.json)</button>
-      <label class="btn ghost" style="text-align:center;cursor:pointer;display:block">⬆ Import backup…
+      <button class="btn" onclick="exportBackup()">${IC.down} Export backup (.json)</button>
+      <label class="btn ghost" style="text-align:center;cursor:pointer;display:block">${IC.up} Import backup…
         <input type="file" accept="application/json,.json" style="display:none" onchange="importFile(this)">
       </label>
     </div>
