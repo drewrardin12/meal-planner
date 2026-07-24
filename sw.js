@@ -1,7 +1,7 @@
 /* Plated service worker — offline app shell */
-const CACHE = 'plated-v2';
+const CACHE = 'plated-v3';
 const IMG = ['breakfast','taco','pizza','pasta','soup','sandwich','salad','seafood','chicken','beef','dessert','leftovers','plate','splash']
-  .map(function(n){return './img/' + n + '.jpg';});
+  .map(function(n){return './' + n + '.jpg';});
 const SHELL = [
   './',
   './index.html',
@@ -13,7 +13,9 @@ const SHELL = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(function(){}))))
+      .then(() => self.skipWaiting())
   );
 });
 
