@@ -283,7 +283,7 @@
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   /* Splash */
   .splash{position:fixed;inset:0;z-index:200;
-    background:linear-gradient(rgba(19,18,16,.5),rgba(19,18,16,.74)), url('img/splash.jpg') center/cover, #131210;
+    background:linear-gradient(rgba(19,18,16,.5),rgba(19,18,16,.74)), url('splash.jpg') center/cover, #131210;
     display:flex;align-items:center;justify-content:center;transition:opacity .55s ease}
   .splash.hide{opacity:0;pointer-events:none}
   .splash-inner{text-align:center;animation:fadeup .8s ease}
@@ -371,7 +371,7 @@ const SLOT_LABEL={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner"};
 const KEY="platedData_v1";
 const OLD_KEY="mealPlannerData_v1";
 const SCHEMA=1;
-const BUILD="Sage";             // build codeword — bump on each shipped change
+const BUILD="Basil";            // build codeword — bump on each shipped change
 const BUILD_DATE="Jul 23, 2026";
 
 /* ---- inline line icons (no emoji anywhere) ---- */
@@ -531,7 +531,7 @@ const CATS=[
 ];
 const CAT_ICON={breakfast:'breakfast',taco:'taco',pizza:'pizza',pasta:'pasta',soup:'soup',sandwich:'sandwich',salad:'salad',dessert:'dessert',leftovers:'leftovers',seafood:'protein',chicken:'protein',beef:'protein',plate:'plate'};
 function catOf(name){const s=' '+(name||'').toLowerCase()+' ';for(const [cat,kws] of CATS){for(const k of kws){if(s.indexOf(k)>=0)return cat;}}return 'plate';}
-function catThumb(name,cls){const c=catOf(name);return `<span class="thumb ${cls||''}"><img class="thumb-img" src="img/${c}.jpg" alt="" loading="lazy"></span>`;}
+function catThumb(name,cls){const c=catOf(name);return `<span class="thumb ${cls||''}"><img class="thumb-img" src="${c}.jpg" alt="" loading="lazy"></span>`;}
 
 /* ============ NAVIGATION ============ */
 let TAB="today";
@@ -754,7 +754,7 @@ function openSnack(w){
 }
 function openEditor(w,di,slot){panelRef={w,di,slot};openEditorRef();}
 
-function heroBanner(name){const c=catOf(name);return `<div class="hero" style="background-image:url('img/${c}.jpg')"></div>`;}
+function heroBanner(name){const c=catOf(name);return `<div class="hero" style="background-image:url('${c}.jpg')"></div>`;}
 function renderDetail(){
   panelMode='detail';
   const m=refMeal(panelRef);
