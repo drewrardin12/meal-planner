@@ -281,9 +281,51 @@
     border:1px solid var(--divider);padding:11px 18px;border-radius:14px;font-size:14px;font-weight:600;z-index:80;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.show{opacity:1}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  /* Splash */
+  .splash{position:fixed;inset:0;z-index:200;background:radial-gradient(130% 100% at 50% 28%, #201f1b 0%, #131210 70%);
+    display:flex;align-items:center;justify-content:center;transition:opacity .55s ease}
+  .splash.hide{opacity:0;pointer-events:none}
+  .splash-inner{text-align:center;animation:fadeup .8s ease}
+  @keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .splash-logo{color:var(--sage);display:flex;justify-content:center;margin-bottom:16px}
+  .splash-logo svg{width:64px;height:64px}
+  .splash-word{font-family:var(--serif);font-weight:400;font-size:48px;letter-spacing:4px;color:var(--text)}
+  .splash-rule{width:44px;height:1px;background:var(--divider);margin:16px auto}
+  .splash-tag{font-family:var(--serif);font-weight:300;font-style:italic;font-size:19px;color:var(--muted);line-height:1.55}
+  /* More menu */
+  .menu{display:flex;flex-direction:column;gap:10px}
+  .menu-row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--divider);border-radius:14px;padding:15px 16px;cursor:pointer;color:var(--text)}
+  .menu-row .mi{color:var(--sage);display:flex;flex:0 0 auto}
+  .menu-row .mi svg{width:22px;height:22px}
+  .menu-row .ml{flex:1;display:flex;flex-direction:column;min-width:0}
+  .menu-row .mt{font-size:15px;font-weight:600}
+  .menu-row .ms{font-size:12.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .menu-row>svg{width:18px;height:18px;color:var(--muted);flex:0 0 auto}
+  /* Plans modal */
+  .plan-row{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
+  .plan-main{flex:1;display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--divider);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--text);text-align:left}
+  .plan-row.active .plan-main{border-color:var(--sage)}
+  .plan-main .pi{color:var(--amber);display:flex;flex:0 0 auto}
+  .plan-main .pi svg{width:20px;height:20px}
+  .plan-main .pl{flex:1;display:flex;flex-direction:column;min-width:0}
+  .plan-main .pt{font-size:15px;font-weight:600}
+  .plan-main .ps{font-size:12px;color:var(--muted);margin-top:1px}
+  .plan-main .pcheck{color:var(--sage);display:flex}
+  .plan-main .pcheck svg{width:18px;height:18px}
+  .plan-edit{background:var(--raised);border:1px solid var(--divider);border-radius:12px;width:46px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer}
+  .plan-edit svg{width:16px;height:16px}
 </style>
 </head>
 <body>
+
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo" id="splashLogo"></div>
+    <div class="splash-word">Plated</div>
+    <div class="splash-rule"></div>
+    <div class="splash-tag">plan once. eat well.<br>all month long.</div>
+  </div>
+</div>
 
 <div class="topbar">
   <div id="topLeft" class="brand"><span class="mono">P</span>lated</div>
@@ -328,7 +370,7 @@ const SLOT_LABEL={breakfast:"Breakfast",lunch:"Lunch",dinner:"Dinner"};
 const KEY="platedData_v1";
 const OLD_KEY="mealPlannerData_v1";
 const SCHEMA=1;
-const BUILD="Thyme";            // build codeword — bump on each shipped change
+const BUILD="Rosemary";         // build codeword — bump on each shipped change
 const BUILD_DATE="Jul 23, 2026";
 
 /* ---- inline line icons (no emoji anywhere) ---- */
@@ -351,7 +393,13 @@ const IC={
   swap:svg('<path d="M7 8h11l-3-3M17 16H6l3 3"/>'),
   note:svg('<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/>'),
   search:svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>'),
-  snack:svg('<path d="M12 4c3.5 0 6 2.5 6 6 0 4-3 8-6 8s-6-4-6-8c0-3.5 2.5-6 6-6z"/><path d="M12 4V2.5"/>')
+  snack:svg('<path d="M12 4c3.5 0 6 2.5 6 6 0 4-3 8-6 8s-6-4-6-8c0-3.5 2.5-6 6-6z"/><path d="M12 4V2.5"/>'),
+  sun:svg('<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>'),
+  snow:svg('<path d="M12 3v18M4.2 7.5 19.8 16.5M19.8 7.5 4.2 16.5"/><path d="M12 6.5 9.8 4.3M12 6.5l2.2-2.2M12 17.5l-2.2 2.2M12 17.5l2.2 2.2"/>'),
+  leaf:svg('<path d="M5 19c0-8 7-13 14-13 0 8-6 13-14 13z"/><path d="M12.5 11.5 8 16"/>'),
+  info:svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>'),
+  box:svg('<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>'),
+  plans:svg('<path d="M12 3 3 8l9 5 9-5z"/><path d="M3 13l9 5 9-5"/>')
 };
 const LOGO_MARK=`<svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M14 6v28"/><path d="M11 6v6M14 6v6M17 6v6"/><path d="M11 12c0 2 6 2 6 0"/>
@@ -505,13 +553,13 @@ function render(){
   renderPlanCtl();
   const v=document.getElementById('view');
   const tl=document.getElementById('topLeft');
-  if(TAB==='today'){tl.className='brand';tl.innerHTML=LOGO_MARK+'<span>Plated</span>';v.innerHTML=viewToday();}
+  if(TAB==='today'||TAB==='more'){tl.className='brand';tl.innerHTML=LOGO_MARK+'<span>Plated</span>';
+    v.innerHTML=(TAB==='today')?viewToday():viewMore();}
   else{tl.className='screen-title';
-    tl.textContent=({week:'Week '+((D.ui.selW||0)+1),month:'Month Overview',grocery:'Groceries',more:'More'})[TAB];
+    tl.textContent=({week:'Week '+((D.ui.selW||0)+1),month:'Month Overview',grocery:'Groceries'})[TAB];
     if(TAB==='week')v.innerHTML=viewPlan();
     else if(TAB==='month')v.innerHTML=viewMonth();
-    else if(TAB==='grocery')v.innerHTML=viewGrocery();
-    else v.innerHTML=viewMore();
+    else v.innerHTML=viewGrocery();
   }
 }
 function renderPlanCtl(){
@@ -975,57 +1023,61 @@ function blankPlanNew(name){
   return {id:uid(),name:name,createdAt:nowISO(),updatedAt:nowISO(),currentWeek:0,weeks:weeks};
 }
 function viewMore(){
-  let h=`<p class="section-label">Plans</p><div class="stack">`;
-  D.planOrder.forEach(id=>{
-    const p=D.plans[id], act=id===D.activePlanId;
-    h+=`<div class="card" style="padding:14px 16px">
-      <div class="row-between">
-        <div style="min-width:0">
-          <div style="font-weight:600;font-size:15px">${esc(p.name)} ${act?'<span style="color:var(--sage);font-size:12px">· Active</span>':''}</div>
-          <div class="muted" style="font-size:12px">${countFilled(p)} meals planned</div>
-        </div>
-        <div style="display:flex;gap:6px;flex:0 0 auto">
-          ${act?'':`<button class="btn ghost mini" onclick="setActivePlan('${id}')">Use</button>`}
-          <button class="btn ghost mini" onclick="renamePlan('${id}')">Rename</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn ghost mini" onclick="seedInto('${id}')">Load starter meals</button>
-        ${D.planOrder.length>1?`<button class="btn danger mini" onclick="deletePlan('${id}')">Delete</button>`:''}
-      </div>
-    </div>`;
-  });
-  h+=`</div>
-  <div style="display:flex;gap:8px;margin-top:12px">
-    <button class="btn ghost mini" onclick="createPlan()">${IC.plus} New plan</button>
-    <button class="btn ghost mini" onclick="duplicatePlan()">${IC.copy} Duplicate active</button>
-  </div>
-
-  <p class="section-label" style="margin-top:30px">Backup</p>
-  <div class="card" style="padding:16px">
-    <p class="muted" style="margin:0 0 12px;font-size:13px">Save a copy of everything, or restore from a file. A safety backup downloads automatically before any import replaces your data.</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn" onclick="exportBackup()">${IC.down} Export backup (.json)</button>
-      <label class="btn ghost" style="text-align:center;cursor:pointer;display:block">${IC.up} Import backup…
-        <input type="file" accept="application/json,.json" style="display:none" onchange="importFile(this)">
-      </label>
-    </div>
-  </div>
-
-  <p class="section-label" style="margin-top:30px">About</p>
-  <div class="card" style="padding:16px">
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.6"><strong>Your plans are stored in this browser, on this device.</strong> Plated has no account or cloud sync. Export a backup before clearing browser data or switching devices.</p>
-    <p class="muted" style="margin:0 0 10px;font-size:12px">Plated · v1.0 · local-first PWA</p>
-    <div class="buildtag">Build <strong>${BUILD}</strong> · ${BUILD_DATE}</div>
+  const planSub=plan().name+' · '+D.planOrder.length+' plan'+(D.planOrder.length>1?'s':'');
+  return `<div class="menu">
+    ${menuRow(IC.plans,'Plans',planSub,'openPlans()')}
+    ${menuRow(IC.box,'Backup & Export','Save or restore your data','openBackup()')}
+    ${menuRow(IC.info,'About','Privacy & build info','openAbout()')}
   </div>`;
-  return h;
+}
+function menuRow(icon,label,sub,onclick){
+  return `<button class="menu-row" onclick="${onclick}"><span class="mi">${icon}</span><span class="ml"><span class="mt">${label}</span><span class="ms">${esc(sub)}</span></span>${IC.chevR}</button>`;
+}
+function planIcon(name){const s=(name||'').toLowerCase();
+  if(s.includes('winter'))return IC.snow;
+  if(s.includes('fall')||s.includes('autumn'))return IC.leaf;
+  return IC.sun;}
+function openPlans(){
+  const rows=D.planOrder.map(id=>{const p=D.plans[id], act=id===D.activePlanId;
+    return `<div class="plan-row ${act?'active':''}">
+      <button class="plan-main" onclick="pickPlan('${id}')">
+        <span class="pi">${planIcon(p.name)}</span>
+        <span class="pl"><span class="pt">${esc(p.name)}</span><span class="ps">4 weeks · ${countFilled(p)} meals</span></span>
+        ${act?`<span class="pcheck">${IC.check}</span>`:''}
+      </button>
+      <button class="plan-edit" onclick="openPlanActions('${id}')" aria-label="Plan options">${IC.pencil}</button>
+    </div>`;}).join('');
+  openModal(`<h3>Plans</h3><p class="msub">Separate four-week rotations — switch anytime.</p>${rows}
+    <button class="btn ghost" style="margin-top:8px" onclick="closeModal();createPlan()">${IC.plus} New plan</button>`);
+}
+function pickPlan(id){D.activePlanId=id;D.ui.selW=plan().currentWeek||0;save();closeModal();render();toast('Switched to '+D.plans[id].name);}
+function openPlanActions(id){const p=D.plans[id];
+  openModal(`<h3>${esc(p.name)}</h3><p class="msub">Plan options</p>
+    <button class="swap-day" onclick="renamePlan('${id}');openPlanActions('${id}')"><span>Rename</span></button>
+    <button class="swap-day" onclick="duplicatePlanById('${id}')"><span>Duplicate</span></button>
+    <button class="swap-day" onclick="seedInto('${id}');openPlans()"><span>Load starter meals</span></button>
+    ${D.planOrder.length>1?`<button class="swap-day" style="color:var(--terracotta)" onclick="deletePlan('${id}');openPlans()"><span>Delete plan</span></button>`:''}
+    <button class="btn ghost" style="margin-top:8px" onclick="openPlans()">Back to plans</button>`);
 }
 function setActivePlan(id){D.activePlanId=id;D.ui.selW=plan().currentWeek||0;save();render();toast('Switched to '+D.plans[id].name);}
 function createPlan(){const n=prompt('Name this plan (e.g. Summer, Winter):');if(n===null)return;const nm=n.trim().slice(0,50);if(!nm)return;const p=blankPlanNew(nm);D.plans[p.id]=p;D.planOrder.push(p.id);D.activePlanId=p.id;D.ui.selW=0;save();render();toast('Plan created');}
-function duplicatePlan(){const copy=JSON.parse(JSON.stringify(plan()));copy.id=uid();copy.name=(plan().name+' (copy)').slice(0,50);copy.createdAt=nowISO();copy.updatedAt=nowISO();D.plans[copy.id]=copy;D.planOrder.push(copy.id);D.activePlanId=copy.id;D.ui.selW=copy.currentWeek||0;save();render();toast('Plan duplicated');}
+function duplicatePlanById(id){const src=D.plans[id];const copy=JSON.parse(JSON.stringify(src));copy.id=uid();copy.name=(src.name+' (copy)').slice(0,50);copy.createdAt=nowISO();copy.updatedAt=nowISO();D.plans[copy.id]=copy;D.planOrder.push(copy.id);D.activePlanId=copy.id;D.ui.selW=copy.currentWeek||0;save();closeModal();render();toast('Plan duplicated');}
 function renamePlan(id){const p=D.plans[id];const n=prompt('Rename plan:',p.name);if(n===null)return;const nm=n.trim().slice(0,50);if(!nm)return;p.name=nm;p.updatedAt=nowISO();save();render();}
 function deletePlan(id){const p=D.plans[id];if(!confirm('Delete plan "'+p.name+'"? This cannot be undone.'))return;delete D.plans[id];D.planOrder=D.planOrder.filter(x=>x!==id);if(!D.planOrder.length){const np=seedPlan('My Plan');D.plans[np.id]=np;D.planOrder=[np.id];}if(D.activePlanId===id)D.activePlanId=D.planOrder[0];D.ui.selW=plan().currentWeek||0;save();render();toast('Plan deleted');}
 function seedInto(id){if(!confirm('Load the starter meals into "'+D.plans[id].name+'"? This replaces the meals in this plan.'))return;const nm=D.plans[id].name;const cw=D.plans[id].currentWeek||0;const sp=seedPlan(nm);sp.id=id;sp.currentWeek=cw;D.plans[id]=sp;save();render();toast('Starter meals loaded');}
+function openBackup(){
+  openModal(`<h3>Backup &amp; Export</h3><p class="msub">Your data lives only in this browser. A safety copy downloads automatically before any import replaces your data.</p>
+    <button class="btn" style="margin-bottom:10px" onclick="exportBackup()">${IC.down} Export backup (.json)</button>
+    <label class="btn ghost" style="display:block;text-align:center;cursor:pointer">${IC.up} Import backup…
+      <input type="file" accept="application/json,.json" style="display:none" onchange="importFile(this)"></label>`);
+}
+function openAbout(){
+  openModal(`<h3>About Plated</h3>
+    <p style="font-size:14px;line-height:1.6;margin:0 0 12px">A calm, reusable meal-planning system — decide once, reuse forever.</p>
+    <p class="msub" style="margin-bottom:14px"><strong style="color:var(--text)">Your plans are stored in this browser, on this device.</strong> No account, no cloud sync. Export a backup before clearing browser data or switching devices.</p>
+    <div class="buildtag">Build <strong>${BUILD}</strong> · ${BUILD_DATE}</div>
+    <button class="btn ghost" style="margin-top:16px" onclick="closeModal()">Close</button>`);
+}
 
 function download(filename,text){
   const blob=new Blob([text],{type:'application/json'});
@@ -1061,7 +1113,7 @@ function importFile(input){
     parsed.groceryStatuses=parsed.groceryStatuses||{};
     if(!parsed.activePlanId||!parsed.plans[parsed.activePlanId])parsed.activePlanId=parsed.planOrder[0];
     parsed.ui={};delete parsed.exportedAt;
-    D=parsed;save();nav('today');toast('Backup restored');
+    D=parsed;save();closeModal();nav('today');toast('Backup restored');
   };
   reader.onerror=()=>alert('Could not read that file.');
   reader.readAsText(file);
@@ -1111,6 +1163,15 @@ D.ui.selW=plan().currentWeek||0;
 D.ui.planView='week';
 save();
 render();
+
+/* splash */
+(function(){
+  var sp=document.getElementById('splash');if(!sp)return;
+  var lg=document.getElementById('splashLogo');if(lg)lg.innerHTML=LOGO_MARK;
+  var hide=function(){sp.classList.add('hide');setTimeout(function(){sp.style.display='none';},600);};
+  sp.addEventListener('click',hide);
+  setTimeout(hide,1800);
+})();
 
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
