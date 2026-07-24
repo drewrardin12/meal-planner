@@ -152,10 +152,12 @@
   .dayrow .chev svg{width:18px;height:18px}
   .mr-txt{min-width:0;flex:1;display:flex;flex-direction:column}
 
-  .dessert-card{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius-card);padding:16px;cursor:pointer}
-  .dessert-card .lab{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:6px}
-  .dessert-card .nm{font-family:var(--serif);font-size:20px;font-weight:500;margin-top:5px}
-  .dessert-card .nm.empty{font-family:var(--sans);color:var(--muted);font-weight:500;font-size:15px}
+  .extras{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .extra-card{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius-card);padding:14px;cursor:pointer;min-width:0}
+  .extra-card .lab{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:5px}
+  .extra-card .lab svg{width:15px;height:15px}
+  .extra-card .nm{font-family:var(--serif);font-size:18px;font-weight:500;margin-top:6px;overflow:hidden;text-overflow:ellipsis}
+  .extra-card .nm.empty{font-family:var(--sans);color:var(--muted);font-weight:500;font-size:14px}
 
   /* Month overview grid */
   .mweek{margin-bottom:16px;background:var(--surface);border:1px solid var(--divider);border-radius:16px;padding:12px 12px 14px}
@@ -260,6 +262,17 @@
   .sb.low.on{background:var(--amber);border-color:var(--amber);color:#241a08}
   .sb.got.on{background:var(--moss);border-color:var(--moss);color:#12210f}
   .completed-h{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding-top:14px;border-top:1px solid var(--divider)}
+  .search{position:relative;margin:14px 0 2px}
+  .search input{width:100%;background:var(--surface);border:1px solid var(--divider);border-radius:12px;padding:11px 12px 11px 40px;font-size:15px;color:var(--text);font-family:inherit}
+  .search input:focus{outline:2px solid var(--sage);outline-offset:1px}
+  .search .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted)}
+  .pill{font-size:11px;font-weight:700;letter-spacing:.3px;padding:6px 11px;border-radius:var(--radius-chip);border:1px solid var(--divider);color:var(--muted);display:inline-flex;align-items:center;gap:0;flex:0 0 auto}
+  .pill.out{background:var(--terracotta);border-color:var(--terracotta);color:#fff}
+  .pill.low{background:var(--amber);border-color:var(--amber);color:#241a08}
+  .pill.got{background:var(--moss);border-color:var(--moss);color:#12210f}
+  .pill.set svg{width:13px;height:13px;margin-left:2px}
+  .gitem{cursor:pointer}
+  .gitem.open{border-color:var(--sage)}
   .buildtag{display:inline-block;background:rgba(139,155,115,.14);border:1px solid rgba(139,155,115,.3);color:var(--sage);
     font-size:12px;font-weight:600;letter-spacing:.4px;padding:5px 12px;border-radius:var(--radius-chip)}
   .buildtag strong{font-weight:700}
@@ -336,7 +349,9 @@ const IC={
   basket:svg('<path d="M5 9h14l-1.3 10.2a1.4 1.4 0 0 1-1.4 1.3H7.7a1.4 1.4 0 0 1-1.4-1.3z"/><path d="M9 9 12 4l3 5"/>','ic-lg'),
   dessert:svg('<path d="M5 13h14l-1.4 6.5a1.4 1.4 0 0 1-1.4 1.1H7.8a1.4 1.4 0 0 1-1.4-1.1z"/><path d="M8 13a4 4 0 0 1 8 0"/><path d="M12 6v3"/>'),
   swap:svg('<path d="M7 8h11l-3-3M17 16H6l3 3"/>'),
-  note:svg('<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/>')
+  note:svg('<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/>'),
+  search:svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>'),
+  snack:svg('<path d="M12 4c3.5 0 6 2.5 6 6 0 4-3 8-6 8s-6-4-6-8c0-3.5 2.5-6 6-6z"/><path d="M12 4V2.5"/>')
 };
 const LOGO_MARK=`<svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M14 6v28"/><path d="M11 6v6M14 6v6M17 6v6"/><path d="M11 12c0 2 6 2 6 0"/>
@@ -376,7 +391,7 @@ function seedPlan(name){
       return {weekday:dn.toLowerCase(),themeLabel:THEME[dn],
         meals:{breakfast:mealRec(B_L[dn].b),lunch:mealRec(B_L[dn].l),dinner:dinner}};
     });
-    return {id:uid(),index:i+1,label:null,days:days,dessert:null};
+    return {id:uid(),index:i+1,label:null,days:days,dessert:null,snack:null};
   });
   return {id:uid(),name:name,createdAt:nowISO(),updatedAt:nowISO(),currentWeek:0,weeks:weeks};
 }
@@ -424,7 +439,9 @@ function migrateOld(o){
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){const d=JSON.parse(raw);if(d&&d.plans){d.ui=d.ui||{};return d;}}
+    if(raw){const d=JSON.parse(raw);if(d&&d.plans){d.ui=d.ui||{};
+      Object.values(d.plans).forEach(pl=>(pl.weeks||[]).forEach(w=>{if(w.snack===undefined)w.snack=null;if(w.dessert===undefined)w.dessert=null;}));
+      return d;}}
     const old=localStorage.getItem(OLD_KEY);
     if(old){const m=migrateOld(JSON.parse(old));if(m){return m;}}
   }catch(e){}
@@ -481,7 +498,7 @@ function nav(t){
   if(t==='month'){ if(D.ui.selW==null)D.ui.selW=plan().currentWeek||0; }
   if(t==='grocery'){ D.groceryStatuses=D.groceryStatuses||{};
     if(D.ui.gScope==null)D.ui.gScope='week'; if(D.ui.gWeek==null)D.ui.gWeek=plan().currentWeek||0;
-    if(D.ui.gFilter==null)D.ui.gFilter='all'; }
+    if(D.ui.gFilter==null)D.ui.gFilter='all'; D.ui.gOpen=null; D.ui.gSearch=''; }
   render(); window.scrollTo(0,0);
 }
 function render(){
@@ -575,15 +592,18 @@ function viewWeek(){
     </button>`;
   });
   h+=`</div>
-  <p class="section-label" style="margin-top:22px">Dessert</p>
-  ${dessertCard(w)}`;
+  <p class="section-label" style="margin-top:24px">Weekly extras</p>
+  <div class="extras">${extraCard(w,'dessert')}${extraCard(w,'snack')}</div>`;
   return h;
 }
-function dessertCard(w){
-  const m=plan().weeks[w].dessert, has=m&&m.name;
-  return `<div class="dessert-card" onclick="openDessert(${w})">
-    <span class="lab">${IC.dessert} Once this week</span>
-    <div class="nm ${has?'':'empty'}">${has?esc(m.name):'Add a weekly dessert'}</div>
+function extraCard(w,kind){
+  const m=plan().weeks[w][kind], has=m&&m.name;
+  const icon=kind==='dessert'?IC.dessert:IC.snack;
+  const label=kind==='dessert'?'Dessert':'Snack';
+  const empty=kind==='dessert'?'Add dessert':'Add snack';
+  return `<div class="extra-card" onclick="${kind==='dessert'?`openDessert(${w})`:`openSnack(${w})`}">
+    <span class="lab">${icon} ${label}</span>
+    <div class="nm ${has?'':'empty'}">${has?esc(m.name):empty}</div>
   </div>`;
 }
 function selWeek(i){D.ui.selW=i;render();}
@@ -660,20 +680,28 @@ let editRType='none';
 
 function refMeal(ref){
   if(ref.dessert)return plan().weeks[ref.w].dessert;
+  if(ref.snack)return plan().weeks[ref.w].snack;
   return plan().weeks[ref.w].days[ref.di].meals[ref.slot];
 }
 function refCtx(ref){
   if(ref.dessert)return 'Weekly dessert · Week '+(ref.w+1);
+  if(ref.snack)return 'Weekly snack · Week '+(ref.w+1);
   return SLOT_LABEL[ref.slot]+' · '+DAYS[ref.di]+' · Week '+(ref.w+1);
 }
+function refKind(ref){return ref.dessert?'dessert':(ref.snack?'snack':'meal');}
 function showPanel(){document.getElementById('panel').classList.add('show');document.body.style.overflow='hidden';}
 function closePanel(){document.getElementById('panel').classList.remove('show');document.body.style.overflow='';panelMode=null;}
 
 function openDetail(w,di,slot){panelRef={w,di,slot};renderDetail();}
 function openDessert(w){
   const m=plan().weeks[w].dessert;
-  if(m&&m.name){panelRef={w,dessert:true};renderDetail();}
-  else{panelRef={w,dessert:true};openEditorRef();}
+  panelRef={w,dessert:true};
+  if(m&&m.name)renderDetail(); else openEditorRef();
+}
+function openSnack(w){
+  const m=plan().weeks[w].snack;
+  panelRef={w,snack:true};
+  if(m&&m.name)renderDetail(); else openEditorRef();
 }
 function openEditor(w,di,slot){panelRef={w,di,slot};openEditorRef();}
 
@@ -711,17 +739,19 @@ function renderDetail(){
 function openEditorRef(){
   panelMode='editor';
   const m=refMeal(panelRef);
-  const isDes=!!panelRef.dessert;
+  const kind=refKind(panelRef);
   const nm=m?m.name:'', ing=m?(m.ingredients||[]):[], sides=m?(m.sides||[]):[], notes=m?m.notes:'';
   const rec=(m&&m.recipe)?m.recipe:{type:'none'};
   editRType=rec.type||'none';
-  document.getElementById('panelTitle').textContent=m?'Edit':(isDes?'Add dessert':'Add meal');
+  const nameLbl=kind==='meal'?'Meal name':(kind==='dessert'?'Dessert name':'Snack name');
+  const ph=kind==='meal'?'e.g. Chicken fajitas':(kind==='dessert'?'e.g. Brownies':'e.g. Popcorn');
+  document.getElementById('panelTitle').textContent=m?'Edit':('Add '+kind);
   document.getElementById('panelBack').textContent='Cancel';
   const act=document.getElementById('panelAction');act.textContent='Save';act.style.visibility='visible';
   document.getElementById('panelBody').innerHTML=`
     <p class="detail-ctx" style="margin-bottom:4px">${refCtx(panelRef)}</p>
-    <label class="fl" for="f_name">${isDes?'Dessert name':'Meal name'} *</label>
-    <input class="inp" id="f_name" value="${esc(nm)}" placeholder="${isDes?'e.g. Brownies':'e.g. Chicken fajitas'}" autocomplete="off">
+    <label class="fl" for="f_name">${nameLbl} *</label>
+    <input class="inp" id="f_name" value="${esc(nm)}" placeholder="${ph}" autocomplete="off">
     <div class="field-err" id="err_name">Please enter a name.</div>
 
     <label class="fl" for="f_ing">Ingredients</label>
@@ -757,10 +787,11 @@ function openEditorRef(){
     <textarea class="inp" id="f_notes" placeholder="Anything to remember">${esc(notes)}</textarea>
 
     <div class="editor-actions">
-      <button class="btn" onclick="saveEditor()">Save ${isDes?'dessert':'meal'}</button>
-      ${m?`<button class="btn danger" onclick="deleteMeal()">Delete ${isDes?'dessert':'meal'}</button>`:''}
+      <button class="btn" onclick="saveEditor()">Save ${kind}</button>
+      ${m?`<button class="btn danger" onclick="deleteMeal()">Delete ${kind}</button>`:''}
     </div>
   `;
+  document.getElementById('panelBody').scrollTop=0;
   showPanel();
 }
 function pickR(t){editRType=t;
@@ -794,15 +825,17 @@ function saveEditor(){
   if(m){Object.assign(m,data);}
   else{m={id:uid(),...data};
     if(panelRef.dessert)plan().weeks[panelRef.w].dessert=m;
+    else if(panelRef.snack)plan().weeks[panelRef.w].snack=m;
     else plan().weeks[panelRef.w].days[panelRef.di].meals[panelRef.slot]=m;}
   plan().updatedAt=nowISO();save();
   announce('Saved '+name);
-  panelRef=panelRef; renderDetail(); render(); toast('Saved');
+  renderDetail(); render(); toast('Saved');
 }
 function deleteMeal(){
   const m=refMeal(panelRef);
-  if(!confirm('Delete "'+(m?m.name:'this meal')+'"?'))return;
+  if(!confirm('Delete "'+(m?m.name:'this item')+'"?'))return;
   if(panelRef.dessert)plan().weeks[panelRef.w].dessert=null;
+  else if(panelRef.snack)plan().weeks[panelRef.w].snack=null;
   else plan().weeks[panelRef.w].days[panelRef.di].meals[panelRef.slot]=null;
   plan().updatedAt=nowISO();save();closePanel();render();toast('Deleted');
 }
@@ -825,7 +858,7 @@ function collect(weeks){
       if(map[k].uses.indexOf(m.name)<0)map[k].uses.push(m.name);
     });
   };
-  weeks.forEach(w=>{ w.days.forEach(d=>SLOTS.forEach(s=>push(d.meals[s]))); push(w.dessert); });
+  weeks.forEach(w=>{ w.days.forEach(d=>SLOTS.forEach(s=>push(d.meals[s]))); push(w.dessert); push(w.snack); });
   return map;
 }
 function gStatus(k){const sc=D.groceryStatuses[gScopeKey()];return sc&&sc[k]?sc[k].state:'';}
@@ -847,14 +880,27 @@ function gCycle(idx){
   announce(next===''?'Cleared':('Marked '+next));
   save();render();
 }
-function gScopeSet(s){D.ui.gScope=s;save();render();}
-function gWeekSet(i){D.ui.gWeek=i;save();render();}
+function gScopeSet(s){D.ui.gScope=s;D.ui.gOpen=null;save();render();}
+function gWeekSet(i){D.ui.gWeek=i;D.ui.gOpen=null;save();render();}
 function gFilterSet(f){D.ui.gFilter=f;render();}
 function gReset(){if(confirm('Reset all Out / Low / Got marks for this list?')){delete D.groceryStatuses[gScopeKey()];save();render();toast('Statuses reset');}}
+function gToggle(idx){const k=GORDER[idx];if(k==null)return;D.ui.gOpen=D.ui.gOpen===k?null:k;render();}
+function gSetKey(idx,state){
+  const k=GORDER[idx]; if(k==null)return;
+  const sk=gScopeKey(); if(!D.groceryStatuses[sk])D.groceryStatuses[sk]={};
+  const cur=D.groceryStatuses[sk][k]?D.groceryStatuses[sk][k].state:'';
+  if(cur===state){delete D.groceryStatuses[sk][k];announce('Cleared');}
+  else{D.groceryStatuses[sk][k]={state:state,updatedAt:nowISO()};announce('Marked '+state);}
+  D.ui.gOpen=null;save();render();
+}
+function gSearchInput(v){D.ui.gSearch=v;renderGroceryList();}
+function renderGroceryList(){document.getElementById('view').innerHTML=viewGrocery();const s=document.getElementById('gsearch');if(s){s.focus();const val=s.value;s.value='';s.value=val;}}
 
 function viewGrocery(){
   const map=collect(gWeeks());
-  const keys=Object.keys(map).sort((a,b)=>map[a].name.localeCompare(map[b].name,undefined,{sensitivity:'base'}));
+  const q=(D.ui.gSearch||'').trim().toLowerCase();
+  let keys=Object.keys(map).sort((a,b)=>map[a].name.localeCompare(map[b].name,undefined,{sensitivity:'base'}));
+  if(q)keys=keys.filter(k=>map[k].name.toLowerCase().indexOf(q)>=0);
   GORDER=keys;
   const idxOf={};keys.forEach((k,i)=>idxOf[k]=i);
 
@@ -867,13 +913,17 @@ function viewGrocery(){
     plan().weeks.forEach((_,i)=>{h+=`<button class="wkpill" aria-pressed="${i===D.ui.gWeek}" onclick="gWeekSet(${i})">Week ${i+1}${i===(plan().currentWeek||0)?'<span class="nowdot">Now</span>':''}</button>`;});
     h+=`</div>`;
   }
-  if(!keys.length){
+  h+=`<div class="search">${IC.search.replace('ic-sm','si')}<input id="gsearch" type="search" placeholder="Search items" value="${esc(D.ui.gSearch||'')}" oninput="gSearchInput(this.value)"></div>`;
+
+  const allKeys=Object.keys(map);
+  if(!allKeys.length){
     return h+`<div class="empty-state"><span class="big">${IC.basket}</span>No ingredients in this scope yet.<br>Add ingredients to your meals and the list builds itself.</div>`;
   }
   const active=keys.filter(k=>gStatus(k)!=='got');
   const got=keys.filter(k=>gStatus(k)==='got');
-  h+=`<div class="row-between" style="margin:16px 0 12px">
-    <span class="muted" style="font-size:13px">${keys.length} item${keys.length!==1?'s':''} · <strong style="color:var(--text)">${active.length}</strong> still to buy</span>
+  const totalActive=allKeys.filter(k=>gStatus(k)!=='got').length;
+  h+=`<div class="row-between" style="margin:14px 0 12px">
+    <span class="muted" style="font-size:13px">${allKeys.length} item${allKeys.length!==1?'s':''} · <strong style="color:var(--text)">${totalActive}</strong> still to buy</span>
     <button class="btn ghost mini" onclick="gReset()">Reset</button>
   </div>
   <div class="gfilter" role="group" aria-label="Filter">
@@ -881,7 +931,8 @@ function viewGrocery(){
   </div>`;
 
   let list='';
-  if(D.ui.gFilter==='got'){
+  if(!keys.length){list=`<p class="muted" style="padding:20px 0;text-align:center">No items match “${esc(q)}”.</p>`;}
+  else if(D.ui.gFilter==='got'){
     list = got.length ? got.map(k=>gItem(k,map[k],idxOf[k])).join('') : `<p class="muted" style="padding:24px 0;text-align:center">Nothing marked Got yet.</p>`;
   }else{
     list = active.length ? active.map(k=>gItem(k,map[k],idxOf[k])).join('') : `<p class="muted" style="padding:16px 0;text-align:center">Everything's marked Got.</p>`;
@@ -894,18 +945,24 @@ function viewGrocery(){
   return h;
 }
 function gItem(k,it,idx){
-  const st=gStatus(k);
+  const st=gStatus(k), open=D.ui.gOpen===k;
   const uses=it.uses.length?`<span class="used">Used in ${esc(it.uses.join(', '))}</span>`:'';
-  return `<div class="gitem ${st==='got'?'got':''}">
-    <div class="ginfo" onclick="gCycle(${idx})">
+  let right;
+  if(open){
+    right=`<div class="gstat" role="group" aria-label="Set status">
+      <button class="sb out ${st==='out'?'on':''}" type="button" onclick="event.stopPropagation();gSetKey(${idx},'out')">Out</button>
+      <button class="sb low ${st==='low'?'on':''}" type="button" onclick="event.stopPropagation();gSetKey(${idx},'low')">Low</button>
+      <button class="sb got ${st==='got'?'on':''}" type="button" onclick="event.stopPropagation();gSetKey(${idx},'got')">Got</button>
+    </div>`;
+  }else{
+    right = st ? `<span class="pill ${st}">${st.toUpperCase()}</span>` : `<span class="pill set">Set${IC.chevR}</span>`;
+  }
+  return `<div class="gitem ${st==='got'?'got':''} ${open?'open':''}" onclick="gToggle(${idx})">
+    <div class="ginfo">
       <span class="gname">${st==='got'?'<span class="ck">'+IC.check+'</span>':''}${esc(it.name)}${it.count>1?` <span class="cnt">×${it.count}</span>`:''}</span>
       ${uses}
     </div>
-    <div class="gstat" role="group" aria-label="Status">
-      <button class="sb out ${st==='out'?'on':''}" type="button" aria-pressed="${st==='out'}" onclick="gSet(${idx},'out')">Out</button>
-      <button class="sb low ${st==='low'?'on':''}" type="button" aria-pressed="${st==='low'}" onclick="gSet(${idx},'low')">Low</button>
-      <button class="sb got ${st==='got'?'on':''}" type="button" aria-pressed="${st==='got'}" onclick="gSet(${idx},'got')">Got</button>
-    </div>
+    ${right}
   </div>`;
 }
 
@@ -914,7 +971,7 @@ function countFilled(p){let n=0;p.weeks.forEach(w=>w.days.forEach(d=>SLOTS.forEa
 function blankPlanNew(name){
   const weeks=[0,1,2,3].map(i=>({id:uid(),index:i+1,label:null,
     days:DAYS.map(dn=>({weekday:dn.toLowerCase(),themeLabel:THEME[dn],meals:{breakfast:null,lunch:null,dinner:null}})),
-    dessert:null}));
+    dessert:null,snack:null}));
   return {id:uid(),name:name,createdAt:nowISO(),updatedAt:nowISO(),currentWeek:0,weeks:weeks};
 }
 function viewMore(){
